@@ -1,0 +1,132 @@
+import streamlit as st
+from io import BytesIO
+from docx import Document
+import pandas as pd
+
+# Define fixed resumes and job descriptions
+job_descriptions = [
+    {"job_description": "Java Developer", 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science"},
+    {"job_description": "Data Scientist", 'years': 3, 'skill1': 'Data Science', 'skill2': 'Machine Learning',
+     'degree': "PhD", 'major': "Computer Science"},
+    {"job_description": "Python Developer", 'years': 5, 'skill1': 'Python', 'skill2': 'Machine Learning',
+     'degree': "Master's", 'major': "Data Science"},
+    {"job_description": "Cloud Engineer", 'years': 4, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering"},
+    {"job_description": "Machine Learning Engineer", 'years': 6, 'skill1': 'Java', 'skill2': 'Data Science',
+     'degree': "Bachelor's", 'major': "Data Science"}
+]
+
+# Fixed resumes
+resumes = [
+    {'name': 'Alice', 'years': 5, 'skill1': 'Python', 'skill2': 'Machine Learning', 'degree': "Master's",
+     'major': "Data Science", 'university': 'Stanford'},
+    {'name': 'Bob', 'years': 5, 'skill1': 'Python', 'skill2': 'Machine Learning', 'degree': "Master's",
+     'major': "Data Science", 'university': 'MIT'},
+    {'name': 'Charlie', 'years': 5, 'skill1': 'Python', 'skill2': 'Machine Learning', 'degree': "Master's",
+     'major': "Data Science", 'university': 'Harvard'},
+    {'name': 'David', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'Berkeley'},
+    {'name': 'Eva', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'MIT'},
+    {'name': 'John', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'Stanford'},
+    {'name': 'Shyam', 'years': 3, 'skill1': 'Data Science', 'skill2': 'Machine Learning', 'degree': "PhD",
+     'major': "Computer Science", 'university': 'Harvard'},
+    {'name': 'Geeta', 'years': 3, 'skill1': 'Data Science', 'skill2': 'Machine Learning', 'degree': "PhD",
+     'major': "Computer Science", 'university': 'Stanford'},
+    {'name': 'Seeta', 'years': 3, 'skill1': 'Data Science', 'skill2': 'Machine Learning', 'degree': "PhD",
+     'major': "Computer Science", 'university': 'MIT'},
+    {'name': 'Amul', 'years': 4, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'Berkeley'},
+    {'name': 'Raja', 'years': 4, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'MIT'},
+    {'name': 'Rani', 'years': 4, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'Stanford'},
+    {'name': 'Alice', 'years': 6, 'skill1': 'Java', 'skill2': 'Data Science', 'degree': "Bachelor's",
+     'major': "Data Science", 'university': 'Harvard'},
+    {'name': 'Bob', 'years': 6, 'skill1': 'Java', 'skill2': 'Data Science', 'degree': "Bachelor's",
+     'major': "Data Science", 'university': 'MIT'},
+    {'name': 'Charlie', 'years': 6, 'skill1': 'Java', 'skill2': 'Data Science', 'degree': "Bachelor's",
+     'major': "Data Science", 'university': 'Stanford'},
+    {'name': 'David', 'years': 5, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'MIT'},
+    {'name': 'Eva', 'years': 5, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'Berkeley'},
+    {'name': 'John', 'years': 5, 'skill1': 'Python', 'skill2': 'Cloud', 'degree': "Master's",
+     'major': "Software Engineering", 'university': 'Stanford'},
+    {'name': 'Shyam', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'Harvard'},
+    {'name': 'Geeta', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'Stanford'},
+    {'name': 'Seeta', 'years': 7, 'skill1': 'Java', 'skill2': 'Cloud', 'degree': "Bachelor's",
+     'major': "Computer Science", 'university': 'MIT'}
+]
+
+
+# Function to match resumes to a selected job description
+def match_resumes(job_desc):
+    matching_resumes = []
+
+    for resume in resumes:
+        if (resume['years'] >= job_desc['years'] and
+                (resume['skill1'] in [job_desc['skill1'], job_desc['skill2']] or
+                 resume['skill2'] in [job_desc['skill1'], job_desc['skill2']]) and
+                resume['degree'] == job_desc['degree'] and
+                resume['major'] == job_desc['major']):
+            matching_resumes.append(resume)
+
+    return matching_resumes
+
+
+# Function to create a Word document from resume data
+def create_resume_doc(resume):
+    doc = Document()
+    doc.add_heading(f"Resume of {resume['name']}", level=1)
+    doc.add_paragraph(f"Name: {resume['name']}")
+    doc.add_paragraph(f"Years of Experience: {resume['years']}")
+    doc.add_paragraph(f"Skills: {resume['skill1']}, {resume['skill2']}")
+    doc.add_paragraph(f"Degree: {resume['degree']}")
+    doc.add_paragraph(f"Major: {resume['major']}")
+    doc.add_paragraph(f"University: {resume['university']}")
+
+    return doc
+
+
+# Streamlit app
+st.title("Resume Matching System")
+
+# Display job descriptions
+st.sidebar.header("Select Job Description")
+job_desc_options = [job_desc["job_description"] for job_desc in job_descriptions]
+job_desc_choice = st.sidebar.selectbox("Choose a job description:", job_desc_options)
+
+# Get selected job description data
+selected_job_desc = next(desc for desc in job_descriptions if desc["job_description"] == job_desc_choice)
+
+# Match resumes
+matching_resumes = match_resumes(selected_job_desc)
+
+# Display results
+st.write(f"*Job Description:* {job_desc_choice}")
+if matching_resumes:
+    st.write("*Matching Resumes:*")
+    for resume in matching_resumes:
+        col1, col2 = st.columns([4, 1])  # Adjust column width as needed
+        with col1:
+            st.write(f"{resume['name']}")
+        with col2:
+            # Create and display download button
+            doc = create_resume_doc(resume)
+            buf = BytesIO()
+            doc.save(buf)
+            buf.seek(0)
+
+            st.download_button(
+                label="Download Resume",
+                data=buf,
+                file_name=f"{resume['name']}_resume.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+else:
+    st.write("No resumes match the selected job description.")
