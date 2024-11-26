@@ -1,0 +1,116 @@
+import streamlit as st
+import cohere
+
+# Initialize Cohere client with API key
+cohere_api_key = "YOUR_COHERE_API_KEY"
+co = cohere.Client(cohere_api_key)
+
+# Function to check if the input is related to healthcare by asking Cohere
+def is_healthcare_related(user_input):
+    check_prompt = f"Is the following question related to healthcare?\nQuestion: {user_input}\nAnswer with only Yes or No."
+    
+    response = co.generate(
+        model='command-xlarge',
+        prompt=check_prompt,
+        max_tokens=10,
+        temperature=0.5
+    )
+    
+    answer = response.generations[0].text.strip().lower()
+    return answer == "yes"
+
+# Function to get Cohere chatbot response with detailed descriptions
+def get_cohere_response(user_input, chat_history):
+    prompt = "You are a highly knowledgeable healthcare assistant. Provide detailed and accurate answers to the user's healthcare-related questions.\n\n"
+    
+    # Add chat history to the prompt
+    for chat in chat_history:
+        prompt += f"User: {chat['user']}\nBot: {chat['bot']}\n"
+    
+    prompt += f"User: {user_input}\nBot:"
+
+    # Get the Cohere response with enhanced settings for more detail
+    response = co.generate(
+        model='command-xlarge',
+        prompt=prompt,
+        max_tokens=300,  # Increased for longer responses
+        temperature=0.5,  # Lower temperature for focused responses
+        stop_sequences=["User:"],  # Ensures it stops after a detailed response
+    )
+    
+    return response.generations[0].text.strip()
+
+# Initialize chat history
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+
+# Streamlit UI layout
+st.set_page_config(page_title="Healthcare Chatbot", page_icon="❤️")  # Add red heart emoji as page icon
+
+# Display red heart icon and motivational text
+st.markdown(
+    """
+    <div style='text-align:center;'>
+        <img src='https://cdn-icons-png.flaticon.com/512/833/833472.png' width='50' style='color:red;'/>
+        <h2 style='color: #2E86C1;'>Healthcare Chatbot</h2>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+# Display motivational message with a colored icon
+st.markdown(
+    """
+    <div style='text-align:center;'>
+        <img src='https://cdn-icons-png.flaticon.com/512/4661/4661395.png' width='30'/>
+        <h4 style='color: #27AE60;'>PREVENTION IS BETTER THAN CURE</h4>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+# Function to refresh chat display with bold text and alternating styles
+def refresh_chat():
+    chat_display = ""
+    for i, chat in enumerate(st.session_state.chat_history):
+        if i % 2 == 0:
+            chat_display += f"<div style='text-align: left; background-color: #f0f0f0; padding: 8px; border-radius: 8px; margin-bottom: 10px;'><b>User:</b> {chat['user']}</div>"
+            chat_display += f"<div style='text-align: left; color: #2E86C1; background-color: #dff9fb; padding: 8px; border-radius: 8px; margin-bottom: 10px;'><b>Bot:</b> {chat['bot']}</div>"
+        else:
+            chat_display += f"<div style='text-align: right; background-color: #f0f0f0; padding: 8px; border-radius: 8px; margin-bottom: 10px;'><b>User:</b> {chat['user']}</div>"
+            chat_display += f"<div style='text-align: right; color: #2E86C1; background-color: #dff9fb; padding: 8px; border-radius: 8px; margin-bottom: 10px;'><b>Bot:</b> {chat['bot']}</div>"
+    
+    st.markdown(f"<div style='max-height: 400px; overflow-y: auto;'>{chat_display}</div>", unsafe_allow_html=True)
+
+# Show the current chat history
+refresh_chat()
+
+# Interactive message typing with feedback
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<b>Type your message below:</b>", unsafe_allow_html=True)
+
+# Create a form for user input with automatic clearing
+with st.form(key="chat_form", clear_on_submit=True):  # Enable clear_on_submit
+    user_input = st.text_input("Your message", "")
+    submit_button = st.form_submit_button(label="Send")
+
+# Process the user's input when they click the Send button
+if submit_button:
+    if user_input:
+        # Show typing indicator before generating response
+        with st.spinner("Typing..."):
+            # Check if the input is healthcare-related using the Cohere LLM
+            if is_healthcare_related(user_input):
+                # Get the bot response with enhanced detail
+                bot_response = get_cohere_response(user_input, st.session_state.chat_history)
+            else:
+                bot_response = "I am a healthcare bot, so please ask me about healthcare."
+        
+        # Update chat history
+        st.session_state.chat_history.append({"user": user_input, "bot": bot_response})
+        
+        # Refresh chat display with interaction
+        refresh_chat()
+
+# Clear button to reset chat history
+if st.button('Clear Chat'):
+    st.session_state.chat_history = []
+    refresh_chat()  # Refresh chat display after clearing
